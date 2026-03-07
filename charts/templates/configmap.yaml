@@ -45,6 +45,15 @@ data:
       type: {{ .Values.broker.type }}
       {{- if eq .Values.broker.type "rabbitmq" }}
       rabbitmq:
+        {{- if and (not .Values.broker.rabbitmq.enabled) .Values.broker.external.enabled }}
+        {{- if not .Values.broker.external.podidentity }}
+        # External broker without pod identity - URL from values
+        url: {{ .Values.broker.external.url | quote }}
+        {{- end }}
+        # When using pod identity, URL comes from BROKER_RABBITMQ_URL env var
+        exchange_type: {{ .Values.broker.external.exchangeType | default "topic" }}
+        {{- else }}
+        # In-cluster RabbitMQ
         url: {{ .Values.broker.rabbitmq.url | quote }}
         exchange_type: {{ .Values.broker.rabbitmq.exchangeType | default "topic" }}
         {{- if .Values.broker.rabbitmq.prefetchCount }}
@@ -52,6 +61,7 @@ data:
         {{- end }}
         {{- if .Values.broker.rabbitmq.prefetchSize }}
         prefetch_size: {{ .Values.broker.rabbitmq.prefetchSize }}
+        {{- end }}
         {{- end }}
       {{- else if eq .Values.broker.type "googlepubsub" }}
       googlepubsub:
