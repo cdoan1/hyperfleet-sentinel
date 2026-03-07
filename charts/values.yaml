@@ -167,6 +167,8 @@ broker:
     # Auto-creation flags (default: false - manual creation required)
     # Set to true to automatically create topics/subscriptions if they don't exist
     createTopicIfMissing: false
+  
+  log_config: true
 
 log_config: true
 
