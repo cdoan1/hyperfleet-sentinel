@@ -168,6 +168,8 @@ broker:
     # Set to true to automatically create topics/subscriptions if they don't exist
     createTopicIfMissing: false
 
+log_config: true
+
 # Subscriber configuration (optional)
 subscriber:
   # Number of parallel workers for message processing
