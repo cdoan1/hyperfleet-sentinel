@@ -50,11 +50,13 @@ data:
       {{- if eq .Values.broker.type "rabbitmq" }}
       rabbitmq:
         {{- if and (not .Values.broker.rabbitmq.enabled) .Values.broker.external.enabled }}
-        {{- if not .Values.broker.external.podidentity }}
+        {{- if .Values.broker.external.podidentity }}
+        # Placeholder URL (overridden by BROKER_RABBITMQ_URL env var from AWS Secrets Manager)
+        url: "amqp://placeholder:placeholder@localhost:5672/"
+        {{- else }}
         # External broker without pod identity - URL from values
         url: {{ .Values.broker.external.url | quote }}
         {{- end }}
-        # When using pod identity, URL comes from BROKER_RABBITMQ_URL env var
         exchange_type: {{ .Values.broker.external.exchangeType | default "topic" }}
         {{- else }}
         # In-cluster RabbitMQ
