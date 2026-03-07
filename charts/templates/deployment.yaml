@@ -80,7 +80,13 @@ spec:
                 key: BROKER_RABBITMQ_URL
           {{- end }}
           {{- if and (not .Values.broker.rabbitmq.enabled) .Values.broker.external.enabled }}
-          {{- if not .Values.broker.external.podidentity }}
+          {{- if .Values.broker.external.podidentity }}
+          - name: BROKER_RABBITMQ_URL
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "sentinel.fullname" . }}-mq-secret
+                key: BROKER_RABBITMQ_URL
+          {{- else }}
           - name: BROKER_RABBITMQ_URL
             value: {{ .Values.broker.external.url | quote }}
           {{- end }}
