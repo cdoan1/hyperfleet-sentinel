@@ -59,6 +59,11 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 3
           failureThreshold: 3
+        {{- if and (not .Values.broker.rabbitmq.enabled) .Values.broker.external.enabled .Values.broker.external.podidentity }}
+        envFrom:
+          - secretRef:
+              name: {{ include "sentinel.fullname" . }}-mq-secret
+        {{- end }}
         env:
           # Broker configuration file location
           - name: BROKER_CONFIG_FILE
@@ -67,12 +72,18 @@ spec:
           - name: BROKER_TOPIC
             value: {{ tpl .Values.broker.topic . | quote }}
           # Broker credentials can be overridden via environment variables from Secret
-          {{- if eq .Values.broker.type "rabbitmq" }}
+          {{- if and (eq .Values.broker.type "rabbitmq") .Values.broker.rabbitmq.enabled }}
           - name: BROKER_RABBITMQ_URL
             valueFrom:
               secretKeyRef:
                 name: {{ include "sentinel.secretName" . }}
                 key: BROKER_RABBITMQ_URL
+          {{- end }}
+          {{- if and (not .Values.broker.rabbitmq.enabled) .Values.broker.external.enabled }}
+          {{- if not .Values.broker.external.podidentity }}
+          - name: BROKER_RABBITMQ_URL
+            value: {{ .Values.broker.external.url | quote }}
+          {{- end }}
           {{- end }}
         volumeMounts:
           - name: config
@@ -83,6 +94,11 @@ spec:
             mountPath: /etc/sentinel/broker.yaml
             subPath: broker.yaml
             readOnly: true
+          {{- if and (not .Values.broker.rabbitmq.enabled) .Values.broker.external.enabled .Values.broker.external.podidentity }}
+          - name: mq-secrets-store
+            mountPath: {{ .Values.broker.external.secretMountPath | default "/mnt/secrets-store" }}
+            readOnly: true
+          {{- end }}
         resources:
           {{- toYaml .Values.resources | nindent 12 }}
       volumes:
@@ -92,6 +108,14 @@ spec:
         - name: broker-config
           configMap:
             name: {{ include "sentinel.fullname" . }}-broker-config
+        {{- if and (not .Values.broker.rabbitmq.enabled) .Values.broker.external.enabled .Values.broker.external.podidentity }}
+        - name: mq-secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ .Values.broker.external.secretProviderClass | default (printf "%s-mq-secrets" (include "sentinel.fullname" .)) }}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

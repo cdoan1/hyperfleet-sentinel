@@ -127,12 +127,35 @@ broker:
   # Override with a static value if needed: topic: "my-custom-topic"
   topic: '{{ .Release.Namespace }}-{{ .Values.config.resourceType }}'
 
-  # RabbitMQ configuration
+  # RabbitMQ configuration (in-cluster)
   # Uses BROKER_RABBITMQ_URL environment variable (single connection string)
   rabbitmq:
+    enabled: false
     # Connection URL format: amqp://user:password@host:port/vhost
     url: amqp://<USER>:<PASSWORD>@rabbitmq.hyperfleet-system.svc.cluster.local:5672/hyperfleet
     exchangeType: topic
+
+  # External broker configuration (e.g., AWS MQ)
+  external:
+    enabled: true
+    # Use AWS Pod Identity + Secrets Store CSI to load MQ credentials from AWS Secrets Manager.
+    # When true, the chart creates a SecretProviderClass and mounts the secret; env vars
+    # BROKER_RABBITMQ_URL, BROKER_USERNAME, BROKER_PASSWORD, BROKER_HOST, BROKER_PORT are
+    # injected from the AWS secret (see broker.external.aws.secretName).
+    podidentity: true
+    secretMountPath: /mnt/secrets-store
+    # Name of the SecretProviderClass (created by chart when createSecretProviderClass is true)
+    secretProviderClass: "hyperfleet-sentinel-mq-secrets"
+    createSecretProviderClass: true
+    # AWS Secrets Manager config when createSecretProviderClass is true.
+    # Expected secret JSON format (e.g. from: aws secretsmanager get-secret-value --secret-id <secretName> --query SecretString --output text):
+    #   { "host": "...", "password": "...", "port": "5671", "url": "amqps://user:pass@host:5671", "username": "..." }
+    aws:
+      region: "us-east-2"
+      secretName: "hyperfleet/mq-credentials"
+    # When podidentity is false, set url here. When podidentity is true, url comes from the AWS secret.
+    url: ""
+    exchangeType: "topic"
 
   # Google Pub/Sub configuration (alternative to RabbitMQ)
   # projectId is written to broker.yaml ConfigMap (not Secret - it's not sensitive)
