@@ -101,10 +101,10 @@ config:
 
   # CloudEvents data payload configuration
   messageData:
-    id: resource.id
-    kind: resource.kind
-    href: resource.href
-    generation: resource.generation
+    id: "resource.id"
+    kind: "resource.kind"
+    href: "resource.href"
+    generation: "resource.generation"
 #  For nodepools, the message should contain owner_references
 #  owner_references:
 #    id: "resource.owner_references.id"
