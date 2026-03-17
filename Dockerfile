@@ -10,6 +10,7 @@ ARG VERSION=""
 # Install make as root (UBI9 go-toolset doesn't include it), then switch back to non-root.
 USER root
 RUN dnf install -y make && dnf clean all
+RUN dnf install -y ca-certificates
 WORKDIR /build
 RUN chown 1001:0 /build
 USER 1001
@@ -38,6 +39,8 @@ FROM ${BASE_IMAGE}
 WORKDIR /app
 
 COPY --from=builder /build/bin/sentinel /app/sentinel
+COPY --from=builder /etc/pki/ca-trust/extracted /etc/pki/ca-trust/extracted
+COPY --from=builder /etc/ssl/certs /etc/ssl/certs
 
 USER 65532:65532
 
