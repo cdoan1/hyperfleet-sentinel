@@ -68,6 +68,18 @@ tolerations: []
 # Affinity
 affinity: {}
 
+# Volume mounts for additional configs
+extraVolumeMounts: []
+# - name: custom-config
+#   mountPath: /etc/custom
+#   readOnly: true
+
+# Additional volumes
+extraVolumes: []
+# - name: custom-config
+#   configMap:
+#     name: custom-configmap
+
 # PodDisruptionBudget configuration
 # See: https://kubernetes.io/docs/tasks/run-application/configure-pdb/#specifying-a-poddisruptionbudget
 podDisruptionBudget:
